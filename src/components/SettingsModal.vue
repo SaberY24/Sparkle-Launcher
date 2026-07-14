@@ -7,7 +7,7 @@ import ColorPicker from "../components/ColorPicker.vue";
 import ToggleSwitch from "../components/ui/ToggleSwitch.vue";  
 import DropdownMenu from "../components/ui/DropdownMenu.vue";
 import AppButton from "../components/ui/AppButton.vue";
-import StatusButton from "../components/ui/StatusButton.vue";
+import SettingsActionButton from "../components/ui/SettingsActionButton.vue";
 import { formatRam, formatRamFull } from "../utils/formats";
 import { useSelectedJavaLabel, useSelectedJavaMeta, useSelectedJavaVendor, useIsLauncherJavaSelected } from "../utils/selectors";
 import { useDebouncedSave } from "../composables/useDebouncedSave";
@@ -592,11 +592,7 @@ watch(useNativeTitlebar, async (newVal) => {
               <Icon v-if="section.icon === 'sun'" name="sun" :size="24" />
               <Icon v-else-if="section.icon === 'java'" name="java" :size="24" />
               <Icon v-else-if="section.icon === 'game'" name="game" :size="24" />
-              <svg v-else-if="section.icon === 'about'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="16" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12.01" y2="8" />
-              </svg>
+              <Icon v-else-if="section.icon === 'about'" name="info" :size="24" />
               <span>{{ section.label }}</span>
             </button>
           </nav>
@@ -817,19 +813,17 @@ watch(useNativeTitlebar, async (newVal) => {
                 <p class="settings-section-sublabel">
                   Mod info and CurseForge icons are cached on disk so the mods list loads instantly. Clear it if something looks outdated.
                 </p>
-                <StatusButton
+                <SettingsActionButton
                   :status="clearingCache ? 'loading' : clearCacheResult"
                   :disabled="clearingCache"
+                  success-style="neutral"
+                  icon="folder"
                   @click="clearModsCache"
                   idle-label="Clear mods cache"
                   loading-label="Clearing..."
                   success-label="Cache cleared"
                   error-label="Failed, try again"
-                >
-                  <template #idle-icon>
-                    <Icon name="folder" :size="24" />
-                  </template>
-                </StatusButton>
+                />
               </div>
             </div>
 
@@ -1066,11 +1060,12 @@ watch(useNativeTitlebar, async (newVal) => {
                 <span class="settings-section-label">Version</span>
                 <p class="settings-section-sublabel">{{ appVersion ? `Sparkle App v${appVersion}` : "Reading version..." }}</p>
 
-                <StatusButton
+                <SettingsActionButton
                   :status="
                     appUpdater.status.value === 'checking' ? 'loading'
                     : appUpdater.status.value === 'downloading' ? 'loading'
                     : appUpdater.status.value === 'up-to-date' ? 'success'
+                    : appUpdater.status.value === 'available' ? 'success'
                     : appUpdater.status.value === 'ready' ? 'success'
                     : appUpdater.status.value === 'error' ? 'error'
                     : 'idle'
@@ -1083,7 +1078,11 @@ watch(useNativeTitlebar, async (newVal) => {
                   "
                   idle-label="Check for updates"
                   loading-label="Checking..."
-                  success-label="Up to date"
+                  :success-label="
+                    appUpdater.status.value === 'available' ? `Update available — v${appUpdater.version.value}`
+                    : appUpdater.status.value === 'ready' ? 'Ready — click to restart'
+                    : 'Up to date'
+                  "
                   error-label="Couldn't check, retry"
                 >
                   <template #idle-icon>
@@ -1093,15 +1092,9 @@ watch(useNativeTitlebar, async (newVal) => {
                       <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
                     </svg>
                   </template>
-                </StatusButton>
+                </SettingsActionButton>
 
-                <p v-if="appUpdater.status.value === 'available'" class="settings-section-sublabel" style="margin-top: 10px; color: var(--accent-primary);">
-                  Version {{ appUpdater.version.value }} is available — click above to download it.
-                </p>
-                <p v-else-if="appUpdater.status.value === 'ready'" class="settings-section-sublabel" style="margin-top: 10px; color: var(--accent-primary);">
-                  Update downloaded — click above to restart and install.
-                </p>
-                <p v-else-if="appUpdater.status.value === 'error' && appUpdater.error.value" class="settings-section-sublabel" style="margin-top: 10px; color: var(--danger);">
+                <p v-if="appUpdater.status.value === 'error' && appUpdater.error.value" class="settings-section-sublabel" style="margin-top: 10px; color: var(--danger);">
                   {{ appUpdater.error.value }}
                 </p>
               </div>
